@@ -93,6 +93,10 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                     current_x = int(x * width)
                     current_y = int(y * height)
                     pyautogui.moveTo(current_x, current_y, duration=0)
+                elif category[int(y_pred.item())] == "CLICK":
+                    pyautogui.click()
+                elif category[int(y_pred.item())] == "DOUBLE_CLICK":
+                    pyautogui.click(clicks=2, interval=0.25)
 
                 image = cv2.putText(image, category[int(y_pred.item())], (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
                 
