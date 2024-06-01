@@ -87,7 +87,7 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
 
                 print(y_pred.item())
 
-                if category[int(y_pred.item())] == 'BACK':
+                if category[int(y_pred.item())] == 'CURSOR_MOVING':
                     old_x, old_y = pyautogui.position()
                     width, height = pyautogui.size()
                     current_x = int(x * width)
