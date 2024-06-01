@@ -1,9 +1,25 @@
+import torch
 import sys
 import cv2
 import mediapipe as mp
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from SSNet import SSNet
+
+import pyautogui
+
+category = ['Free', 'BACK', 'CLICK', 'DOUBLE_CLICK']
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+model = SSNet()
+
+model.to(device)
+
+model.load_state_dict(torch.load("./best_model.pt", map_location=device))
+
+model.eval()
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
@@ -47,20 +63,26 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                 angle = np.arccos(np.einsum('nt,nt->n',
                     j[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],:], 
                     j[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],:]))
-        
-                # angle = np.degrees(angle)
-
-                # print(angle)
-
-                angle = np.append(angle, label)
-
-                # print(angle)
 
                 df = pd.DataFrame([angle])
+                # 데이터 추출 시
+                # df = pd.DataFrame([angle, label])
                 hand_d = pd.concat([hand_d, df])
 
-                    # df = pd.DataFrame([{'idx': count, 'x': data.x, 'y': data.y, 'z': data.z}])
-                    # hand_d = pd.concat([hand_d, df])
+                X = torch.from_numpy(angle)
+                X = X.type(torch.FloatTensor)
+                X.to(device)
+
+                y_pred = model(X)
+                
+                y_pred = torch.argmax(y_pred, -1)
+
+                print(y_pred.item())
+
+                image = cv2.putText(image, category[int(y_pred.item())], (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+                
+                # 데이터 추출 시
+                # hand_d = pd.concat([hand_d, df])
                 
                 # Get X
                 # print(str(hand_lms.landmark[0].x))
@@ -70,7 +92,7 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                 # print(str(hand_lms.landmark[0].z))
 
                 # print(hand_d)
-                print(df)
+                # print(df)
                 count = count + 1
                 
                     
