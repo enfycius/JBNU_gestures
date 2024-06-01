@@ -11,7 +11,7 @@ import pyautogui
 
 pyautogui.FAILSAFE = False
 
-category = ['BACK', 'CLICK', 'CURSOR_MOVING' 'DOUBLE_CLICK']
+category = ['BACK', 'CLICK', 'CURSOR_MOVING', 'DOUBLE_CLICK']
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
