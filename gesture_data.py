@@ -49,10 +49,10 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                     j[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],:], 
                     j[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],:]))
                 
-                angle = np.append([angle, label])
+                angle = np.append(angle, label)
 
                 # 데이터 추출 시
-                df = pd.DataFrame([angle, label])
+                df = pd.DataFrame([angle])
 
                 # 데이터 추출 시
                 hand_d = pd.concat([hand_d, df])
