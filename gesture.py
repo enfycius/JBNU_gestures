@@ -2,10 +2,18 @@ import sys
 import cv2
 import mediapipe as mp
 import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 cap = cv2.VideoCapture(0)
+count = 0
+
+label = "back"
+number = 3
+
+hand_d = pd.DataFrame(columns=[i for i in range(20)])
 
 with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) as hands:
     while cap.isOpened():
@@ -17,6 +25,8 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
 
         if detected_image.multi_hand_landmarks:
             for hand_lms in detected_image.multi_hand_landmarks:
+                skeleton = np.zeros((21, 3))
+    
                 mp_drawing.draw_landmarks(image, hand_lms, 
                                           mp_hands.HAND_CONNECTIONS,
                                           landmark_drawing_spec=mp.solutions.drawing_utils.DrawingSpec(
@@ -25,16 +35,49 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                                             color=(20, 180, 90), thickness=2, circle_radius=2)
                                         )
                 
-                # Get X
-                print(str(hand_lms.landmark[0].x))
-                # Get Y
-                print(str(hand_lms.landmark[0].y))
-                # Get Z
-                print(str(hand_lms.landmark[0].z))
+                for idx, data in enumerate(hand_lms.landmark):
+                    skeleton[idx] = [data.x, data.y, data.z]
+
+                j1 = skeleton[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],:]
+                j2 = skeleton[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],:]
+                j = j2 - j1
+
+                j = j/np.linalg.norm(j, axis = 1)[:, np.newaxis]
+        
+                angle = np.arccos(np.einsum('nt,nt->n',
+                    j[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],:], 
+                    j[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],:]))
+        
+                # angle = np.degrees(angle)
+
+                # print(angle)
+
+                angle = np.append(angle, label)
+
+                # print(angle)
+
+                df = pd.DataFrame([angle])
+                hand_d = pd.concat([hand_d, df])
+
+                    # df = pd.DataFrame([{'idx': count, 'x': data.x, 'y': data.y, 'z': data.z}])
+                    # hand_d = pd.concat([hand_d, df])
                 
+                # Get X
+                # print(str(hand_lms.landmark[0].x))
+                # Get Y
+                # print(str(hand_lms.landmark[0].y))
+                # Get Z
+                # print(str(hand_lms.landmark[0].z))
+
+                # print(hand_d)
+                print(df)
+                count = count + 1
+                
+                    
         cv2.imshow('Webcam', image)
   
         if cv2.waitKey(1) & 0xFF == ord('q'):
+          hand_d.to_csv(f"./gestures/{label + str(number)}.csv")
           break
 
 cap.release()
