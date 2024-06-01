@@ -25,7 +25,7 @@ pyautogui.FAILSAFE = False
 freq = 44100
 duration = 5
 
-category = ['BACK', 'CLICK', 'CURSOR_MOVING', 'DOUBLE_CLICK']
+category = ['BACK', 'CLICK', 'CURSOR_MOVING', 'DOUBLE_CLICK', 'PASTE', 'RECORDING']
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -141,7 +141,7 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                     pyautogui.click()
                 elif category[int(y_pred.item())] == "DOUBLE_CLICK":
                     pyautogui.click(clicks=2, interval=0.25)
-                elif category[int(y_pred.item())] == "BACK":
+                elif category[int(y_pred.item())] == "RECORDING":
                     if thr == None:
                         thr = threading.Thread(target=start_recording)
                         thr.start()

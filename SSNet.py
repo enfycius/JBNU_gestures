@@ -16,7 +16,7 @@ class SSNet(nn.Module):
         self.hidden4 = nn.Linear(512, 1024)
         self.act4 = nn.ReLU()
         self.drop4 = nn.Dropout(0.25)
-        self.output = nn.Linear(1024, 4)
+        self.output = nn.Linear(1024, 6)
 
     def forward(self, x):
         x = self.drop1(self.act1(self.hidden1(x)))
