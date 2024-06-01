@@ -9,7 +9,9 @@ from SSNet import SSNet
 
 import pyautogui
 
-category = ['Free', 'BACK', 'CLICK', 'DOUBLE_CLICK']
+pyautogui.FAILSAFE = False
+
+category = ['BACK', 'CLICK', 'CURSOR_MOVING' 'DOUBLE_CLICK']
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -55,6 +57,12 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                     skeleton[idx] = [data.x, data.y, data.z]
 
                 j1 = skeleton[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],:]
+
+                print("x:", np.mean(skeleton[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], 0]))
+                x = np.mean(skeleton[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], 0])
+                print("y:", np.mean(skeleton[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], 1]))
+                y = np.mean(skeleton[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], 1])
+
                 j2 = skeleton[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],:]
                 j = j2 - j1
 
@@ -78,6 +86,13 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                 y_pred = torch.argmax(y_pred, -1)
 
                 print(y_pred.item())
+
+                if category[int(y_pred.item())] == 'BACK':
+                    old_x, old_y = pyautogui.position()
+                    width, height = pyautogui.size()
+                    current_x = int(x * width)
+                    current_y = int(y * height)
+                    pyautogui.moveTo(current_x, current_y, duration=0)
 
                 image = cv2.putText(image, category[int(y_pred.item())], (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
                 
