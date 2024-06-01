@@ -6,10 +6,20 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from SSNet import SSNet
-
+import sounddevice as sd
+from scipy.io.wavfile import write
+import wavio as wv
+import time
 import pyautogui
+import threading
+import struct
+import wave
+from pvrecorder import PvRecorder
 
 pyautogui.FAILSAFE = False
+
+freq = 44100
+duration = 5
 
 category = ['BACK', 'CLICK', 'CURSOR_MOVING', 'DOUBLE_CLICK']
 
@@ -31,7 +41,28 @@ count = 0
 label = "back"
 number = 3
 
+thr = None
+
 hand_d = pd.DataFrame(columns=[i for i in range(20)])
+
+def start_recording():
+    recorder = PvRecorder(device_index=-1, frame_length=512)
+    audio = []
+
+    recorder.start()
+
+    t_end = time.time() + 5
+    
+    while time.time() < t_end:
+        frame = recorder.read()
+        audio.extend(frame)
+
+    recorder.stop()
+
+    with wave.open("./recording.mp3", "w") as f:
+        f.setparams((1, 2, 16000, 512, "NONE", "NONE"))
+        f.writeframes(struct.pack("h" * len(audio), *audio))
+
 
 with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) as hands:
     while cap.isOpened():
@@ -97,6 +128,10 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                     pyautogui.click()
                 elif category[int(y_pred.item())] == "DOUBLE_CLICK":
                     pyautogui.click(clicks=2, interval=0.25)
+                elif category[int(y_pred.item())] == "BACK":
+                    if thr == None:
+                        thr = threading.Thread(target=start_recording)
+                        thr.start()
 
                 image = cv2.putText(image, category[int(y_pred.item())], (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
                 
@@ -114,7 +149,16 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                 # print(df)
                 count = count + 1
                 
-                    
+        
+        try:
+            if thr is not None:
+                if thr.is_alive():
+                    image = cv2.putText(image, "RECORDING", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                else:
+                    thr = None
+        except Exception as e:
+            pass
+        
         cv2.imshow('Webcam', image)
   
         if cv2.waitKey(1) & 0xFF == ord('q'):
