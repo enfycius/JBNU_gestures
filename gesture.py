@@ -15,6 +15,10 @@ import threading
 import struct
 import wave
 from pvrecorder import PvRecorder
+import speech_recognition as sr
+import pyperclip
+
+r = sr.Recognizer()
 
 pyautogui.FAILSAFE = False
 
@@ -41,9 +45,18 @@ count = 0
 label = "back"
 number = 3
 
+s = None
+
 thr = None
+thr_copy = None
 
 hand_d = pd.DataFrame(columns=[i for i in range(20)])
+
+def display_text():
+    t_end = time.time() + 5
+    
+    while time.time() < t_end:
+        pass
 
 def start_recording():
     recorder = PvRecorder(device_index=-1, frame_length=512)
@@ -155,10 +168,34 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                 if thr.is_alive():
                     image = cv2.putText(image, "RECORDING", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                 else:
+                    text_recording=sr.AudioFile('./recording.mp3')
+
+                    with text_recording as source:
+                        audio = r.record(source)
+                    try:
+                        s = r.recognize_google(audio)
+                        print("Text: "+s)
+
+                        pyperclip.copy(s)
+
+                        thr_copy = threading.Thread(target=display_text)
+                        thr_copy.start()
+                    except Exception as e:
+                        print("Exception: "+str(e))
                     thr = None
         except Exception as e:
             pass
-        
+
+        try:
+            if thr_copy is not None:
+                if thr_copy.is_alive():
+                    image = cv2.putText(image, f"TEXT: {s}", (150, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                else:
+                    thr_copy = None
+                    s = None
+        except Exception as e:
+            pass
+
         cv2.imshow('Webcam', image)
   
         if cv2.waitKey(1) & 0xFF == ord('q'):
