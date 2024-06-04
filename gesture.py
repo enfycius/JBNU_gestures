@@ -123,9 +123,9 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
 
                 X = torch.from_numpy(angle)
                 X = X.type(torch.FloatTensor)
-                X.to(device)
+                X = X.to(device)
 
-                y_pred = model(X)
+                y_pred = model(X).to(device)
                 
                 y_pred = torch.argmax(y_pred, -1)
 
@@ -145,6 +145,12 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                     if thr == None:
                         thr = threading.Thread(target=start_recording)
                         thr.start()
+                elif category[int(y_pred.item())] == "BACK":
+                    pyautogui.hotkey('alt', 'left')
+                    time.sleep(1)
+                elif category[int(y_pred.item())] == "PASTE":
+                    pyautogui.hotkey('ctrl', 'v')
+                    time.sleep(1)
 
                 image = cv2.putText(image, category[int(y_pred.item())], (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
                 
@@ -196,6 +202,9 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
         except Exception as e:
             pass
 
+        cv2.namedWindow('Webcam', cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty('Webcam', cv2.WND_PROP_FULLSCREEN,
+                         cv2.WINDOW_NORMAL)
         cv2.imshow('Webcam', image)
   
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -204,4 +213,3 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
 
 cap.release()
 cv2.destroyAllWindows()
-        
