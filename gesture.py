@@ -33,7 +33,7 @@ model = SSNet()
 
 model.to(device)
 
-model.load_state_dict(torch.load("./best_model.pt", map_location=device))
+model.load_state_dict(torch.load("/home/sss/JBNU_gestures/best_model.pt", map_location=device))
 
 model.eval()
 
@@ -49,6 +49,7 @@ s = None
 
 thr = None
 thr_copy = None
+th1, th2, th3, th4 = None, None, None, None
 
 hand_d = pd.DataFrame(columns=[i for i in range(20)])
 
@@ -72,7 +73,7 @@ def start_recording():
 
     recorder.stop()
 
-    with wave.open("./recording.mp3", "w") as f:
+    with wave.open("/home/sss/JBNU_gestures/recording.mp3", "w") as f:
         f.setparams((1, 2, 16000, 512, "NONE", "NONE"))
         f.writeframes(struct.pack("h" * len(audio), *audio))
 
@@ -102,9 +103,9 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
 
                 j1 = skeleton[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],:]
 
-                print("x:", np.mean(skeleton[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], 0]))
+               #  print("x:", np.mean(skeleton[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], 0]))
                 x = np.mean(skeleton[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], 0])
-                print("y:", np.mean(skeleton[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], 1]))
+                # print("y:", np.mean(skeleton[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], 1]))
                 y = np.mean(skeleton[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], 1])
 
                 j2 = skeleton[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20],:]
@@ -129,7 +130,7 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                 
                 y_pred = torch.argmax(y_pred, -1)
 
-                print(y_pred.item())
+                # print(y_pred.item())
 
                 if category[int(y_pred.item())] == 'CURSOR_MOVING':
                     old_x, old_y = pyautogui.position()
@@ -139,18 +140,36 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                     pyautogui.moveTo(current_x, current_y, duration=0)
                 elif category[int(y_pred.item())] == "CLICK":
                     pyautogui.click()
+                    if th1 == None:
+                        th1 = threading.Thread(target=display_text)
+                        th1.start()
+                    else:
+                        th1 = None
                 elif category[int(y_pred.item())] == "DOUBLE_CLICK":
                     pyautogui.click(clicks=2, interval=0.25)
+                    if th2 == None:
+                        th2 = threading.Thread(target=display_text)
+                        th2.start()
+                    else:
+                        th2 = None
                 elif category[int(y_pred.item())] == "RECORDING":
                     if thr == None:
                         thr = threading.Thread(target=start_recording)
                         thr.start()
                 elif category[int(y_pred.item())] == "BACK":
                     pyautogui.hotkey('alt', 'left')
-                    time.sleep(1)
+                    if th3 == None:
+                        th3 = threading.Thread(target=display_text)
+                        th3.start()
+                    else:
+                        th3 = None
                 elif category[int(y_pred.item())] == "PASTE":
                     pyautogui.hotkey('ctrl', 'v')
-                    time.sleep(1)
+                    if th4 == None:
+                        th4 = threading.Thread(target=display_text)
+                        th4.start()
+                    else:
+                        th4 = None
 
                 image = cv2.putText(image, category[int(y_pred.item())], (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
                 
@@ -180,7 +199,7 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                         audio = r.record(source)
                     try:
                         s = r.recognize_google(audio)
-                        print("Text: "+s)
+                  #       print("Text: "+s)
 
                         pyperclip.copy(s)
 
