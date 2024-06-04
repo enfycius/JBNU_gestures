@@ -42,8 +42,8 @@ mp_hands = mp.solutions.hands
 cap = cv2.VideoCapture(0)
 count = 0
 
-label = "back"
-number = 3
+# label = "back"
+# number = 3
 
 s = None
 
@@ -56,6 +56,12 @@ hand_d = pd.DataFrame(columns=[i for i in range(20)])
 def display_text():
     t_end = time.time() + 5
     
+    while time.time() < t_end:
+        pass
+
+def display_text2():
+    t_end = time.time() + 10
+
     while time.time() < t_end:
         pass
 
@@ -117,10 +123,10 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                     j[[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],:], 
                     j[[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],:]))
 
-                df = pd.DataFrame([angle])
+                # df = pd.DataFrame([angle])
                 # 데이터 추출 시
                 # df = pd.DataFrame([angle, label])
-                hand_d = pd.concat([hand_d, df])
+                # hand_d = pd.concat([hand_d, df])
 
                 X = torch.from_numpy(angle)
                 X = X.type(torch.FloatTensor)
@@ -139,16 +145,16 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                     current_y = int(y * height)
                     pyautogui.moveTo(current_x, current_y, duration=0)
                 elif category[int(y_pred.item())] == "CLICK":
-                    pyautogui.click()
-                    if th1 == None:
-                        th1 = threading.Thread(target=display_text)
-                        th1.start()
-                    else:
-                        th1 = None
+                    pyautogui.click(interval=0.5)
+                    #if th1 == None:
+                     #   th1 = threading.Thread(target=display_text)
+                     #   th1.start()
+                    #else:
+                     #   th1 = None
                 elif category[int(y_pred.item())] == "DOUBLE_CLICK":
                     pyautogui.click(clicks=2, interval=0.25)
                     if th2 == None:
-                        th2 = threading.Thread(target=display_text)
+                        th2 = threading.Thread(target=display_text2)
                         th2.start()
                     else:
                         th2 = None
@@ -159,14 +165,14 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
                 elif category[int(y_pred.item())] == "BACK":
                     pyautogui.hotkey('alt', 'left')
                     if th3 == None:
-                        th3 = threading.Thread(target=display_text)
+                        th3 = threading.Thread(target=display_text2)
                         th3.start()
                     else:
                         th3 = None
                 elif category[int(y_pred.item())] == "PASTE":
                     pyautogui.hotkey('ctrl', 'v')
                     if th4 == None:
-                        th4 = threading.Thread(target=display_text)
+                        th4 = threading.Thread(target=display_text2)
                         th4.start()
                     else:
                         th4 = None
