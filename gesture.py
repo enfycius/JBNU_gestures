@@ -22,7 +22,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 model = SSNet()
 model.to(device)
-model.load_state_dict(torch.load("./best_model.pt", map_location=device))
+model.load_state_dict(torch.load(r"C:\JBNU_gestures\model.pt", map_location=device))
 model.eval()
 
 mp_drawing = mp.solutions.drawing_utils
@@ -42,21 +42,29 @@ def start_recording():
     audio = []
 
     recorder.start()
-    time.sleep(5)
-    audio.extend(recorder.read())
+
+    t_end = time.time() + 5
+    
+    while time.time() < t_end:
+        frame = recorder.read()
+        audio.extend(frame)
+
     recorder.stop()
 
-    with wave.open("./recording.mp3", "w") as f:
+    with wave.open(r"C:\JBNU_gestures\recording.mp3", "w") as f:
         f.setparams((1, 2, 16000, 512, "NONE", "NONE"))
         f.writeframes(struct.pack("h" * len(audio), *audio))
 
 def recognize_audio():
     global s
-    with sr.AudioFile('./recording.mp3') as source:
+    with sr.AudioFile(r"C:\JBNU_gestures\recording.mp3") as source:
         audio = r.record(source)
     try:
         s = r.recognize_google(audio)
         pyperclip.copy(s)
+
+        print(s)
+
     except Exception as e:
         print(f"Exception: {e}")
 
@@ -112,15 +120,32 @@ with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) a
 
                 cv2.putText(image, action, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
-        if thr and not thr.is_alive():
-            thr = None
-            thr_copy = threading.Thread(target=recognize_audio)
-            thr_copy.start()
+        # if thr and not thr.is_alive():
+        #     thr = None
+        #     thr = threading.Thread(target=recognize_audio)
+        #     thr.start()
 
-        if thr_copy and not thr_copy.is_alive():
-            cv2.putText(image, f"TEXT: {s}", (150, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            thr_copy = None
-            s = None
+        if thr: 
+            if thr.is_alive():
+                cv2.putText(image, "RECORDING", (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            else:
+                th1 = threading.Thread(target=recognize_audio)
+                th1.start()
+                thr = None
+
+        if th1:
+            if th1.is_alive():
+                thr_copy = threading.Thread(target=display_text)
+                thr_copy.start()
+            else:
+                th1 = None
+
+        if thr_copy:
+            if thr_copy.is_alive() and not s is None:
+                 cv2.putText(image, f"TEXT: {s}", (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            else:
+                thr_copy = None
+                s = None
 
         cv2.imshow('Webcam', image)
         if cv2.waitKey(1) & 0xFF == ord('q'):
